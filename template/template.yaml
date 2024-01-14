@@ -42,11 +42,14 @@ units:
       name: "sonar"
       portMappings: 
         - containerPort: 9000
+          hostPort: 9000
+          protocol: "tcp"
+          appProtocol: "http"
       command:
         - "-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmap=false"
       environment:
         - name: SONAR_JDBC_URL
-          value: jdbc:postgresql://sonarqube.cluster-c3k8oyk04p3n.us-east-1.rds.amazonaws.com/
+          value: jdbc:postgresql://{{ remoteState "this.Database.db_instance_endpoint" }}/postgres
         - name: SONAR_JDBC_USERNAME
           value: sonar_user
         - name: SONAR_JDBC_PASSWORD
@@ -54,5 +57,6 @@ units:
       requires_compatibilities:
         - "FARGATE"
       cpu: 1024
-      network_mode: awsvpc
       memory: 3072
+      network_mode: awsvpc
+      execution_role_arn: arn:aws:iam::826406658508:role/ecsTaskExecutionRole
