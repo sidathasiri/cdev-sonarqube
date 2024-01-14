@@ -1,0 +1,33 @@
+_p: &provider_aws
+  - aws:
+      region: {{ .variables.region }}
+
+name: cdev-sonarqube
+kind: StackTemplate
+units:
+  - name: Database
+    type: tfmodule
+    providers: *provider_aws
+    source: terraform-aws-modules/rds/aws
+    inputs:
+      engine: "postgres"
+      engine_version: "14"
+      family: "postgres14" # DB parameter group
+      major_engine_version: "14"         # DB option group
+      instance_class: "db.t4g.large"
+      identifier: 'sonar-database'
+      db_name: 'sonarqube'
+      username: 'sonar_user'
+      password: 'password'
+      publicly_accessible: true
+      allocated_storage: 5
+      manage_master_user_password: false
+      vpc_security_group_ids: ["sg-aa185480"]
+      subnet_ids: ["subnet-b4be5295", "subnet-84f214e2"]
+
+  - name: ECSCluster
+    type: tfmodule
+    providers: *provider_aws
+    source: terraform-aws-modules/ecs/aws
+    inputs:
+      cluster_name: "sonar-cluster"

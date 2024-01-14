@@ -1,0 +1,7 @@
+name: cdev-sonarqube
+kind: Project
+backend: aws-backend
+variables:
+  organization: my-organization
+  region: us-east-1
+  state_bucket_name: cluster-dev-state
