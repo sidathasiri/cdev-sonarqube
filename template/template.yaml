@@ -31,3 +31,28 @@ units:
     source: terraform-aws-modules/ecs/aws
     inputs:
       cluster_name: "sonar-cluster"
+  
+  - name: ECSTaskDefinition
+    type: tfmodule
+    providers: *provider_aws
+    source: github.com/mongodb/terraform-aws-ecs-task-definition
+    inputs:
+      image: "sonarqube:lts-community"
+      family: "sonar"
+      name: "sonar"
+      portMappings: 
+        - containerPort: 9000
+      command:
+        - "-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmap=false"
+      environment:
+        - name: SONAR_JDBC_URL
+          value: jdbc:postgresql://sonarqube.cluster-c3k8oyk04p3n.us-east-1.rds.amazonaws.com/
+        - name: SONAR_JDBC_USERNAME
+          value: sonar_user
+        - name: SONAR_JDBC_PASSWORD
+          value: password
+      requires_compatibilities:
+        - "FARGATE"
+      cpu: 1024
+      network_mode: awsvpc
+      memory: 3072
