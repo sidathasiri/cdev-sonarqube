@@ -14,6 +14,17 @@ units:
       vpc_id: "vpc-ca3604b0"
       ingress_cidr_blocks: ["0.0.0.0/0"]
 
+  - name: DBSecurityGroup
+    type: tfmodule
+    providers: *provider_aws
+    source: terraform-aws-modules/security-group/aws
+    inputs:
+      name: 'DBSecurityGroup'
+      vpc_id: "vpc-ca3604b0"
+      ingress_with_source_security_group_id:
+        - rule: "postgresql-tcp"
+          source_security_group_id: 'sg-aa185480'
+
   - name: Database
     type: tfmodule
     providers: *provider_aws
@@ -31,7 +42,7 @@ units:
       publicly_accessible: true
       allocated_storage: 5
       manage_master_user_password: false
-      vpc_security_group_ids: ['sg-aa185480']
+      vpc_security_group_ids: [{{ remoteState "this.DBSecurityGroup.security_group_id" }}]
       subnet_ids: ['subnet-b4be5295', 'subnet-84f214e2']
 
   - name: ECSCluster
