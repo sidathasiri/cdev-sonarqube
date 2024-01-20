@@ -113,4 +113,4 @@ units:
     type: printer
     depends_on: this.LoadBalancer
     outputs:
-      api_endpoint: {{ remoteState "this.LoadBalancer.dns_name" }}
+      sonar_url: http://{{ remoteState "this.LoadBalancer.dns_name" }}
