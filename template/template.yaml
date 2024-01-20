@@ -25,6 +25,20 @@ units:
         - rule: "postgresql-tcp"
           source_security_group_id: 'sg-aa185480'
 
+  - name: ECSSVCSecurityGroup
+    type: tfmodule
+    providers: *provider_aws
+    source: terraform-aws-modules/security-group/aws
+    inputs:
+      name: 'ECSSVCSecurityGroup'
+      vpc_id: "vpc-ca3604b0"
+      ingress_with_cidr_blocks:
+        - from_port: 9000
+          to_port: 9000
+          protocol: "tcp"
+          cidr_blocks: "0.0.0.0/0"
+
+
   - name: Database
     type: tfmodule
     providers: *provider_aws
@@ -122,7 +136,7 @@ units:
       task_exec_iam_role_arn: arn:aws:iam::826406658508:role/ecsTaskExecutionRole
       assign_public_ip: true
       subnet_ids: ['subnet-b4be5295', 'subnet-84f214e2']
-      security_group_ids: ['sg-aa185480']
+      security_group_ids: [{{ remoteState "this.ECSSVCSecurityGroup.security_group_id" }}]
       load_balancer:
         service:
           target_group_arn: {{ remoteState "this.LoadBalancer.target_groups.ecsTarget.arn" }}
