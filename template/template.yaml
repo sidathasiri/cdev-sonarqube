@@ -23,7 +23,7 @@ units:
       vpc_id: "vpc-ca3604b0"
       ingress_with_source_security_group_id:
         - rule: "postgresql-tcp"
-          source_security_group_id: 'sg-aa185480'
+          source_security_group_id: {{ remoteState "this.ECSSVCSecurityGroup.security_group_id" }}
 
   - name: ECSSVCSecurityGroup
     type: tfmodule
