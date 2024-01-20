@@ -5,6 +5,15 @@ _p: &provider_aws
 name: cdev-sonarqube
 kind: StackTemplate
 units:
+  - name: WebSecurityGroup
+    type: tfmodule
+    providers: *provider_aws
+    source: terraform-aws-modules/security-group/aws//modules/http-80
+    inputs:
+      name: 'WebSecurityGroup'
+      vpc_id: "vpc-ca3604b0"
+      ingress_cidr_blocks: ["0.0.0.0/0"]
+
   - name: Database
     type: tfmodule
     providers: *provider_aws
@@ -71,7 +80,7 @@ units:
       subnets: ['subnet-b4be5295', 'subnet-84f214e2']
       enable_deletion_protection: false
       create_security_group: false
-      security_groups: ['sg-aa185480']
+      security_groups: [{{ remoteState "this.WebSecurityGroup.security_group_id" }}]
       target_groups:
         ecsTarget:
           name_prefix: 'SQ-'
