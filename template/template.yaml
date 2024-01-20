@@ -10,11 +10,11 @@ units:
     providers: *provider_aws
     source: terraform-aws-modules/rds/aws
     inputs:
-      engine: "postgres"
-      engine_version: "14"
-      family: "postgres14" # DB parameter group
-      major_engine_version: "14"         # DB option group
-      instance_class: "db.t4g.large"
+      engine: 'postgres'
+      engine_version: '14'
+      family: 'postgres14' # DB parameter group
+      major_engine_version: '14' # DB option group
+      instance_class: 'db.t4g.large'
       identifier: 'sonar-database'
       db_name: 'sonarqube'
       username: 'sonar_user'
@@ -22,31 +22,31 @@ units:
       publicly_accessible: true
       allocated_storage: 5
       manage_master_user_password: false
-      vpc_security_group_ids: ["sg-aa185480"]
-      subnet_ids: ["subnet-b4be5295", "subnet-84f214e2"]
+      vpc_security_group_ids: ['sg-aa185480']
+      subnet_ids: ['subnet-b4be5295', 'subnet-84f214e2']
 
   - name: ECSCluster
     type: tfmodule
     providers: *provider_aws
     source: terraform-aws-modules/ecs/aws
     inputs:
-      cluster_name: "sonar-cluster"
-  
+      cluster_name: 'sonar-cluster'
+
   - name: ECSTaskDefinition
     type: tfmodule
     providers: *provider_aws
     source: github.com/mongodb/terraform-aws-ecs-task-definition
     inputs:
-      image: "sonarqube:lts-community"
-      family: "sonar"
-      name: "sonar"
-      portMappings: 
+      image: 'sonarqube:lts-community'
+      family: 'sonar'
+      name: 'sonar'
+      portMappings:
         - containerPort: 9000
           hostPort: 9000
-          protocol: "tcp"
-          appProtocol: "http"
+          protocol: 'tcp'
+          appProtocol: 'http'
       command:
-        - "-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmap=false"
+        - '-Dsonar.search.javaAdditionalOpts=-Dnode.store.allow_mmap=false'
       environment:
         - name: SONAR_JDBC_URL
           value: jdbc:postgresql://{{ remoteState "this.Database.db_instance_endpoint" }}/postgres
@@ -55,8 +55,62 @@ units:
         - name: SONAR_JDBC_PASSWORD
           value: password
       requires_compatibilities:
-        - "FARGATE"
+        - 'FARGATE'
       cpu: 1024
       memory: 3072
       network_mode: awsvpc
       execution_role_arn: arn:aws:iam::826406658508:role/ecsTaskExecutionRole
+
+  - name: LoadBalancer
+    type: tfmodule
+    providers: *provider_aws
+    source: terraform-aws-modules/alb/aws
+    inputs:
+      name: 'sonarqube'
+      vpc_id: 'vpc-ca3604b0'
+      subnets: ['subnet-b4be5295', 'subnet-84f214e2']
+      enable_deletion_protection: false
+      create_security_group: false
+      security_groups: ['sg-aa185480']
+      target_groups:
+        ecsTarget:
+          name_prefix: 'SQ-'
+          protocol: 'HTTP'
+          port: 80
+          target_type: 'ip'
+          create_attachment: false
+      listeners:
+        ecs-foward:
+          port: 80
+          protocol: 'HTTP'
+          forward:
+            target_group_key: 'ecsTarget'
+
+  - name: ECSService
+    type: tfmodule
+    providers: *provider_aws
+    source: terraform-aws-modules/ecs/aws//modules/service
+    inputs:
+      name: 'sonarqube'
+      cluster_arn: {{ remoteState "this.ECSCluster.cluster_arn" }}
+      cpu: 1024
+      memory: 4096
+      create_task_definition: false
+      task_definition_arn: {{ remoteState "this.ECSTaskDefinition.arn" }}
+      create_security_group: false
+      create_task_exec_iam_role: false
+      task_exec_iam_role_arn: arn:aws:iam::826406658508:role/ecsTaskExecutionRole
+      assign_public_ip: true
+      subnet_ids: ['subnet-b4be5295', 'subnet-84f214e2']
+      security_group_ids: ['sg-aa185480']
+      load_balancer:
+        service:
+          target_group_arn: {{ remoteState "this.LoadBalancer.target_groups.ecsTarget.arn" }}
+          container_name: sonar
+          container_port: 9000
+
+  - name: outputs
+    type: printer
+    depends_on: this.LoadBalancer
+    outputs:
+      api_endpoint: {{ remoteState "this.LoadBalancer.dns_name" }}
