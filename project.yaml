@@ -5,3 +5,7 @@ variables:
   organization: my-organization
   region: us-east-1
   state_bucket_name: cluster-dev-state
+  vpc_id: vpc-ca3604b0
+  subnet_1: subnet-b4be5295
+  subnet_2: subnet-84f214e2
+  account_id: 826406658508

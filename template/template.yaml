@@ -11,7 +11,7 @@ units:
     source: terraform-aws-modules/security-group/aws//modules/http-80
     inputs:
       name: 'WebSecurityGroup'
-      vpc_id: "vpc-ca3604b0"
+      vpc_id: {{ .variables.vpc_id }}
       ingress_cidr_blocks: ["0.0.0.0/0"]
 
   - name: DBSecurityGroup
@@ -20,7 +20,7 @@ units:
     source: terraform-aws-modules/security-group/aws
     inputs:
       name: 'DBSecurityGroup'
-      vpc_id: "vpc-ca3604b0"
+      vpc_id: {{ .variables.vpc_id }}
       ingress_with_source_security_group_id:
         - rule: "postgresql-tcp"
           source_security_group_id: {{ remoteState "this.ECSSVCSecurityGroup.security_group_id" }}
@@ -31,13 +31,17 @@ units:
     source: terraform-aws-modules/security-group/aws
     inputs:
       name: 'ECSSVCSecurityGroup'
-      vpc_id: "vpc-ca3604b0"
+      vpc_id: {{ .variables.vpc_id }}
       ingress_with_cidr_blocks:
         - from_port: 9000
           to_port: 9000
           protocol: "tcp"
           cidr_blocks: "0.0.0.0/0"
-
+      egress_with_cidr_blocks:
+        - from_port: 9000
+          to_port: 9000
+          protocol: "-1"
+          cidr_blocks: "0.0.0.0/0"
 
   - name: Database
     type: tfmodule
@@ -57,7 +61,7 @@ units:
       allocated_storage: 5
       manage_master_user_password: false
       vpc_security_group_ids: [{{ remoteState "this.DBSecurityGroup.security_group_id" }}]
-      subnet_ids: ['subnet-b4be5295', 'subnet-84f214e2']
+      subnet_ids: [{{ .variables.subnet_1 }}, {{ .variables.subnet_2 }}]
 
   - name: ECSCluster
     type: tfmodule
@@ -101,8 +105,8 @@ units:
     source: terraform-aws-modules/alb/aws
     inputs:
       name: 'sonarqube'
-      vpc_id: 'vpc-ca3604b0'
-      subnets: ['subnet-b4be5295', 'subnet-84f214e2']
+      vpc_id: {{ .variables.vpc_id }}
+      subnets: [{{ .variables.subnet_1 }}, {{ .variables.subnet_2 }}]
       enable_deletion_protection: false
       create_security_group: false
       security_groups: [{{ remoteState "this.WebSecurityGroup.security_group_id" }}]
@@ -135,7 +139,7 @@ units:
       create_task_exec_iam_role: false
       task_exec_iam_role_arn: arn:aws:iam::826406658508:role/ecsTaskExecutionRole
       assign_public_ip: true
-      subnet_ids: ['subnet-b4be5295', 'subnet-84f214e2']
+      subnet_ids: [{{ .variables.subnet_1 }}, {{ .variables.subnet_2 }}]
       security_group_ids: [{{ remoteState "this.ECSSVCSecurityGroup.security_group_id" }}]
       load_balancer:
         service:
