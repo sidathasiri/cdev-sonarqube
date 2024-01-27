@@ -97,7 +97,6 @@ units:
       cpu: 1024
       memory: 3072
       network_mode: awsvpc
-      execution_role_arn: arn:aws:iam::826406658508:role/ecsTaskExecutionRole
 
   - name: LoadBalancer
     type: tfmodule
@@ -136,8 +135,7 @@ units:
       create_task_definition: false
       task_definition_arn: {{ remoteState "this.ECSTaskDefinition.arn" }}
       create_security_group: false
-      create_task_exec_iam_role: false
-      task_exec_iam_role_arn: arn:aws:iam::826406658508:role/ecsTaskExecutionRole
+      create_task_exec_iam_role: true
       assign_public_ip: true
       subnet_ids: [{{ .variables.subnet_1 }}, {{ .variables.subnet_2 }}]
       security_group_ids: [{{ remoteState "this.ECSSVCSecurityGroup.security_group_id" }}]
