@@ -12,3 +12,5 @@ This repository contains an implementation to deploy SonarQube on AWS ECS with C
 
 - Update the variables in the `project.yaml`
 - Run `cdev apply`
+
+### Read further on [Medium](https://medium.com/@sidathasiri/streamlining-sonarqube-on-aws-ecs-simplified-deployment-using-cluster-dev-0b988536fff0)
