@@ -7,4 +7,3 @@ variables:
   vpc_id: {{ .project.variables.vpc_id }}
   subnet_1: {{ .project.variables.subnet_1 }}
   subnet_2: {{ .project.variables.subnet_2 }}
-  account_id: {{ .project.variables.account_id }}
