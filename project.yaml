@@ -2,9 +2,9 @@ name: cdev-sonarqube
 kind: Project
 backend: aws-backend
 variables:
-  organization: my-organization
-  region: us-east-1
-  state_bucket_name: cluster-dev-state
-  vpc_id: vpc-ca3604b0
-  subnet_1: subnet-b4be5295
-  subnet_2: subnet-84f214e2
+  organization: <org-name>
+  region: <aws-region>
+  state_bucket_name: <s3-bucket-for-state>
+  vpc_id: <vpc-id>
+  subnet_1: <subnet1-id>
+  subnet_2: <subnet2-id>
